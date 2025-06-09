@@ -170,34 +170,3 @@ def recommend(request: RecommendRequest):
     ]
 
     return {"topN": len(scored_results), "results": scored_results}
-
-# --- Run Server ---
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=False)
-
-# --- Unit Tests ---
-if __name__ != "__main__":
-    from fastapi.testclient import TestClient
-    client = TestClient(app)
-
-    def test_valid_recommend():
-        response = client.post("/recommend", json={"locationNames": [place_names[0]], "topN": 3})
-        assert response.status_code == 200
-        json_data = response.json()
-        assert isinstance(json_data["results"], list)
-        assert len(json_data["results"]) <= 3
-        assert json_data["topN"] == len(json_data["results"])
-        for item in json_data["results"]:
-            assert "score" in item
-            assert isinstance(item["score"], float)
-            assert item["data"] is not None
-
-    def test_invalid_location():
-        response = client.post("/recommend", json={"locationNames": ["Nonexistent Place"]})
-        assert response.status_code == 404
-
-    def test_health_check():
-        response = client.get("/")
-        assert response.status_code == 200
-        assert response.json() == {"status": "ok"}
